@@ -33,3 +33,19 @@ for ops in all_operations:
     results.add(result)
 
 print(len(results))
+"""
+n=1: 1
+n=2: 3
+n=3: 11
+n=4: 24
+n=5: 64
+n=6: 133
+n=7: 296
+n=8: 483
+n=9: 1040
+n=10: 2014
+n=11: 3721
+n=12: 7287
+n=13: 12448
+n=14: 19987
+"""
