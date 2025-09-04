@@ -1,0 +1,113 @@
+"""
+Tools for Townsend's ADT
+Replace's abbey road's version
+"""
+
+def pad(arr,d):
+    base=[0]*d
+    base.extend(arr)
+    base.extend([0]*d)
+    return base
+
+def unpad(arr):
+    i = 0
+    while i < len(arr) and arr[i]==0:
+        i+=1
+    k = len(arr)-1
+    while k >= 0 and arr[k]==0:
+        k-=1
+    return arr[i:k+1]
+
+def adt(arr, d):
+    # Pad with d zeros on both ends
+    newArr = pad(arr, d)
+    # Apply ADT transform: sum with delayed version
+    transformed = [newArr[i] + newArr[i - d] for i in range(d, len(newArr))]
+    return unpad(transformed)
+
+def rev_adt(arr, d):
+    # Pad with d zeros on both ends (same as adt)
+    padded_output = pad(arr, d)
+    recovered = [0]*len(padded_output)
+    for i in range(d, len(padded_output)):
+        recovered[i] = padded_output[i] - recovered[i - d]
+    # Remove padding
+    return unpad(recovered)
+
+import numpy as np
+from IPython.display import Audio
+import matplotlib.pyplot as plt
+
+fs = 44100  # sample rate
+duration = 0.5  # seconds
+t = np.linspace(0, duration, int(fs * duration), endpoint=False)
+
+# Frequency drops from high_freq to low_freq exponentially
+high_freq = 150  # starting frequency (Hz)
+low_freq = 50    # ending frequency (Hz)
+
+# Exponential frequency drop over time
+freq = high_freq * (low_freq / high_freq) ** (t / duration)
+
+# Instantaneous phase for frequency modulation
+phase = 2 * np.pi * np.cumsum(freq) / fs
+
+# Generate sine wave with pitch drop
+kick = np.sin(phase)
+
+# Amplitude envelope: fast attack, quick decay
+attack_time = 0.01  # 10 ms attack
+decay_time = 0.3    # 300 ms decay
+envelope = np.concatenate((
+    np.linspace(0, 1, int(fs * attack_time)),  # attack
+    np.linspace(1, 0, int(fs * decay_time)),   # decay
+))
+# Pad envelope if shorter than signal
+if len(envelope) < len(kick):
+    envelope = np.pad(envelope, (0, len(kick) - len(envelope)), 'constant')
+
+kick = kick * envelope
+
+# Normalize to -1..1
+kick /= np.max(np.abs(kick))
+
+duration = 0.5  # seconds
+
+# Generate white noise
+noise = np.random.normal(0, 1, int(fs * duration))
+
+# Simple bandpass filter to shape the noise (like a snare)
+def butter_bandpass(lowcut, highcut, fs, order=6):
+    nyq = 0.5 * fs
+    low = lowcut / nyq
+    high = highcut / nyq
+    b, a = butter(order, [low, high], btype='band')
+    return b, a
+
+def bandpass_filter(data, lowcut, highcut, fs, order=6):
+    b, a = butter_bandpass(lowcut, highcut, fs, order=order)
+    y = lfilter(b, a, data)
+    return y
+
+filtered_noise = bandpass_filter(noise, 1000, 8000, fs)
+
+# Create an amplitude envelope (fast attack, exponential decay)
+envelope = np.exp(-5 * np.linspace(0, duration, int(fs * duration)))
+snare_sound = filtered_noise * envelope
+
+# Normalize
+snare_sound /= np.max(np.abs(snare_sound))
+
+# Convert to float32
+kick_f32 = kick.astype(np.float32)
+snare_f32 = snare_sound.astype(np.float32)
+
+# Normalize just in case
+kick_f32 /= np.max(np.abs(kick_f32))
+snare_f32 /= np.max(np.abs(snare_f32))
+
+# Concatenate
+combined = np.concatenate((kick_f32, snare_f32))
+
+# Play combined sound
+Audio(rev_adt(combined,fs//10),rate=fs)
