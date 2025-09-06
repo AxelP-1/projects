@@ -158,7 +158,7 @@ def sineWave(freq, sampleRate, leng, amplitude=1000):
         ret.append(math.sin(phase) * amplitude)
     return ret
 
-def guitarString(freq, sampleRate, leng):
+def piano(freq, sampleRate, leng):
     t = np.linspace(0, leng, int(sampleRate * leng), endpoint=False)
     wave = 0.6 * np.sin(2 * np.pi * freq * t) + \
            0.3 * np.sin(2 * np.pi * freq * 2 * t) + \
@@ -260,7 +260,7 @@ song = [
 full_wave = []
 for note, duration in song:
     freq = noteToFreq(note)
-    wave = guitarString(freq, fs, duration)
+    wave = piano(freq, fs, duration)
     full_wave.extend(wave)
 
 # Apply taper at the end (1/10 sec)
