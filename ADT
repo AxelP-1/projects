@@ -158,6 +158,34 @@ def sineWave(freq, sampleRate, leng, amplitude=1000):
         ret.append(math.sin(phase) * amplitude)
     return ret
 
+def guitarString(freq, sampleRate, leng):
+    t = np.linspace(0, leng, int(sampleRate * leng), endpoint=False)
+    wave = 0.6 * np.sin(2 * np.pi * freq * t) + \
+           0.3 * np.sin(2 * np.pi * freq * 2 * t) + \
+           0.1 * np.sin(2 * np.pi * freq * 3 * t)
+
+    attack = 0.005
+    decay = 0.4
+    attack_samples = int(sampleRate * attack)
+    decay_samples = int(sampleRate * decay)
+
+    attack_env = np.linspace(0, 1, attack_samples)
+    decay_env = np.exp(-5 * np.linspace(0, 1, decay_samples))
+
+    envelope = np.concatenate([attack_env, decay_env])
+
+    # If envelope is shorter than wave, pad with zeros
+    if len(envelope) < len(wave):
+        envelope = np.pad(envelope, (0, len(wave) - len(envelope)), mode='constant')
+    # If envelope is longer, truncate
+    else:
+        envelope = envelope[:len(wave)]
+
+    wave *= envelope
+    wave = bandpass_filter(wave, lowcut=80, highcut=3000, fs=sampleRate, order=4)
+    wave /= np.max(np.abs(wave))
+    return wave
+
 
 def drums(beat_pattern):
     beat_wave = []
@@ -232,7 +260,7 @@ song = [
 full_wave = []
 for note, duration in song:
     freq = noteToFreq(note)
-    wave = sineWave(freq, fs, duration)
+    wave = guitarString(freq, fs, duration)
     full_wave.extend(wave)
 
 # Apply taper at the end (1/10 sec)
