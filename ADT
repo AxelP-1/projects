@@ -170,6 +170,17 @@ def drums(beat_pattern):
             beat_wave.extend([0.0] * len(kick_f32))  # silence with same length
     return beat_wave
 
+def applyReverb(audio, delay_ms=50, decay=0.5, repeats=5, fs=44100):
+    delay_samples = int(fs * delay_ms / 1000)
+    reverb = np.copy(audio).astype(np.float32)
+    
+    for i in range(1, repeats + 1):
+        delayed = np.pad(audio, (delay_samples * i, 0))[:len(audio)]
+        reverb += decay**i * delayed
+    
+    # Normalize to avoid clipping
+    reverb /= np.max(np.abs(reverb))
+    return reverb
 
 def taper(arr, start, end):
     for i in range(start):
@@ -229,4 +240,4 @@ fade_len = int(0.1 * fs)
 full_wave = taper(full_wave, fade_len, fade_len)
 
 # Play
-Audio(drums(["kick","kick","snare",None])*10, rate=fs)
+Audio(applyReverb(full_wave), rate=fs)
