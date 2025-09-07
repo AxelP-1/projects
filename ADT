@@ -4,6 +4,8 @@ import numpy as np
 from scipy.fft import fft, fftfreq
 import math
 from google.colab import files
+import librosa
+import random
 
 
 #uploaded = files.upload()
@@ -46,9 +48,31 @@ def adt(arr, d):
     transformed = [newArr[i] + newArr[i - d] for i in range(d, len(newArr))]
     return unpad(transformed)
 
+def shift_and_adt(arr, d, fs=44100):
+    newArr = pad(arr, d)
+    length = len(newArr)
+
+    # Extract delayed portion (as float32 for librosa)
+    delayed = np.array(newArr[:length - d], dtype=np.float32)
+
+    # Random pitch shift in semitones between -0.1 and 0.1
+    random_semitone = random.uniform(-0.1, 0.1)
+
+    # Use librosa pitch_shift (preserves length)
+    shifted_delayed = librosa.effects.pitch_shift(delayed, sr=fs, n_steps=random_semitone)
+
+    # Sum current samples with pitch-shifted delayed samples
+    transformed = []
+    for i in range(d, length):
+        current_sample = newArr[i]
+        delayed_sample = shifted_delayed[i - d]
+        transformed.append(current_sample + delayed_sample)
+
+    return unpad(transformed)
+
 def chorus(arr,d,steps):
   for i in range(steps):
-    arr=adt(arr,d)
+    arr=shift_and_adt(arr,d)
   return arr
 
 def rev_adt(arr, d):
@@ -335,4 +359,4 @@ def playSong(song,instrument):
       full_wave.extend(wave)
   return full_wave
 
-Audio(playSong(tune,harmonica),rate=fs)
+Audio(chorus(playSong(tune,violin),fs//20,4),rate=fs)
