@@ -323,7 +323,7 @@ def flute(freq, sampleRate, leng):
     return taper(custom_synth(freq, sampleRate, leng, fluteHarmonics),fs//10,0)
 # Build the full waveform
 
-tune = [
+chorus = [
     ("G4", 0.4), 
     ("G4", 0.4), 
     ("A4", 0.8), 
@@ -351,6 +351,38 @@ tune = [
     ("C5", 1.2),
 ]
 
+verse = [
+    ("E4", 0.4), 
+    ("F4", 0.4), 
+    ("G4", 0.8), 
+    ("E4", 0.8),
+    ("A4", 0.8), 
+    ("G4", 1.2),
+
+    ("C4", 0.4), 
+    ("D4", 0.4), 
+    ("E4", 0.8), 
+    ("G4", 0.8), 
+    ("F4", 0.8), 
+    ("E4", 1.2),
+
+    ("A4", 0.4), 
+    ("G4", 0.4), 
+    ("C5", 0.8), 
+    ("B4", 0.8), 
+    ("A4", 0.8), 
+    ("F4", 0.8), 
+    ("E4", 1.2),
+
+    ("D4", 0.4), 
+    ("E4", 0.4), 
+    ("F4", 0.8), 
+    ("G4", 0.8), 
+    ("E4", 0.8), 
+    ("C4", 2),
+]
+
+
 def playSong(song,instrument):
   full_wave = []
   for note, duration in song:
@@ -360,7 +392,7 @@ def playSong(song,instrument):
   return full_wave
 
 music=playSong(tune,piano)
-rev_music=rev_adt(music,fs//5)
+rev_music=rev_adt(music,2*fs)
 music = [music[i]*6+rev_music[i] for i in range(len(music))]
-
+music += adt(playSong(verse,piano),fs*2)
 Audio(music,rate=fs)
