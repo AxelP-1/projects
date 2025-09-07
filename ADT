@@ -48,7 +48,7 @@ def adt(arr, d):
     transformed = [newArr[i] + newArr[i - d] for i in range(d, len(newArr))]
     return unpad(transformed)
 
-def shift_and_adt(arr, d, fs=44100):
+def shift_and_adt(arr, d, ammount,fs=44100):
     newArr = pad(arr, d)
     length = len(newArr)
 
@@ -56,7 +56,7 @@ def shift_and_adt(arr, d, fs=44100):
     delayed = np.array(newArr[:length - d], dtype=np.float32)
 
     # Random pitch shift in semitones between -0.1 and 0.1
-    random_semitone = random.uniform(-0.1, 0.1)
+    random_semitone = random.uniform(-ammount, ammount)
 
     # Use librosa pitch_shift (preserves length)
     shifted_delayed = librosa.effects.pitch_shift(delayed, sr=fs, n_steps=random_semitone)
@@ -72,7 +72,7 @@ def shift_and_adt(arr, d, fs=44100):
 
 def chorus(arr,d,steps):
   for i in range(steps):
-    arr=shift_and_adt(arr,d)
+    arr=shift_and_adt(arr,d,0.1/steps)
   return arr
 
 def rev_adt(arr, d):
@@ -359,4 +359,4 @@ def playSong(song,instrument):
       full_wave.extend(wave)
   return full_wave
 
-Audio(chorus(playSong(tune,violin),fs//20,4),rate=fs)
+Audio(chorus(playSong(tune,violin),fs//20,2),rate=fs)
