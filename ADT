@@ -358,5 +358,11 @@ def playSong(song,instrument):
       wave = instrument(freq, fs, duration)
       full_wave.extend(wave)
   return full_wave
+"""
+A kind of track never heard before with an effect also never heard before
+"""
+music=playSong(tune,piano)
+rev_music=rev_adt(music,fs//5)
+music = [music[i]*6+rev_music[i] for i in range(len(music))]
 
-Audio(chorus(playSong(tune,violin),fs//20,2),rate=fs)
+Audio(music,rate=fs)
