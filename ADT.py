@@ -47,6 +47,29 @@ def adt(arr, d):
     # Apply ADT transform: sum with delayed version
     transformed = [newArr[i] + newArr[i - d] for i in range(d, len(newArr))]
     return unpad(transformed)
+import numpy as np
+
+def stack_with_delay(base_track, overlay_track, delay_sec, fs=44100):
+    delay_samples = int(delay_sec * fs)
+    
+    # Length of the output track = max length needed to fit both
+    total_length = max(len(base_track), delay_samples + len(overlay_track))
+    
+    # Initialize output array with zeros
+    combined_track = np.zeros(total_length, dtype=np.float32)
+    
+    # Add base track from the start
+    combined_track[:len(base_track)] += base_track
+    
+    # Add overlay track starting at delay_samples
+    combined_track[delay_samples:delay_samples + len(overlay_track)] += overlay_track
+    
+    # Normalize if needed to avoid clipping
+    max_val = np.max(np.abs(combined_track))
+    if max_val > 1:
+        combined_track = combined_track / max_val
+    
+    return combined_track
 
 def shift_and_adt(arr, d, ammount,fs=44100):
     newArr = pad(arr, d)
@@ -87,6 +110,29 @@ def rev_adt(arr, d):
 import numpy as np
 from IPython.display import Audio
 import matplotlib.pyplot as plt
+
+def hi_hat_hit(duration=0.1, fs=44100):
+    # Generate white noise
+    noise = np.random.normal(0, 1, int(fs * duration))
+    
+    # High-pass filter to simulate bright metallic sound (e.g., above 5000 Hz)
+    def highpass_filter(data, cutoff=5000, fs=44100, order=6):
+        nyq = 0.5 * fs
+        normal_cutoff = cutoff / nyq
+        b, a = butter(order, normal_cutoff, btype='high', analog=False)
+        return lfilter(b, a, data)
+    
+    filtered_noise = highpass_filter(noise, cutoff=6000, fs=fs)
+    
+    # Very fast amplitude envelope (quick attack and very quick decay)
+    envelope = np.exp(-50 * np.linspace(0, duration, int(fs * duration)))
+    
+    hi_hat = filtered_noise * envelope
+    
+    # Normalize
+    hi_hat /= np.max(np.abs(hi_hat)) if np.max(np.abs(hi_hat)) > 0 else 1
+    
+    return hi_hat.astype(np.float32)
 
 fs = 44100  # sample rate
 duration = 0.5  # seconds
@@ -208,13 +254,17 @@ def custom_synth(freq, sampleRate, leng, harmonics):
 
 def drums(beat_pattern):
     beat_wave = []
+    tot = 0
     for beat in beat_pattern:
         if beat == "kick":
-            beat_wave.extend(kick_f32)
+            beat_wave=stack_with_delay(beat_wave,kick_f32,tot*int(44100*0.4))
         elif beat == "snare":
-            beat_wave.extend(snare_f32)
+            beat_wave=stack_with_delay(beat_wave,snare_f32,tot*int(44100*0.4))
         else:
-            beat_wave.extend([0.0] * len(kick_f32))  # silence with same length
+            beat_wave.extend([0.0] * int(44100*0.4))
+        
+        beat_wave=stack_with_delay(beat_wave,hi_hat_hit(),tot*int(44100*0.4))
+        tot+=1
     return beat_wave
 
 def applyReverb(audio, delay_ms=50, decay=0.5, repeats=5, fs=44100):
@@ -323,7 +373,7 @@ def flute(freq, sampleRate, leng):
     return taper(custom_synth(freq, sampleRate, leng, fluteHarmonics),fs//10,0)
 # Build the full waveform
 
-tune = [
+chorus = [
     ("G4", 0.4), 
     ("G4", 0.4), 
     ("A4", 0.8), 
@@ -351,6 +401,38 @@ tune = [
     ("C5", 1.2),
 ]
 
+verse = [
+    ("E4", 0.4), 
+    ("F4", 0.4), 
+    ("G4", 0.8), 
+    ("E4", 0.8),
+    ("A4", 0.8), 
+    ("G4", 1.2),
+
+    ("C4", 0.4), 
+    ("D4", 0.4), 
+    ("E4", 0.8), 
+    ("G4", 0.8), 
+    ("F4", 0.8), 
+    ("E4", 1.2),
+
+    ("A4", 0.4), 
+    ("G4", 0.4), 
+    ("C5", 0.8), 
+    ("B4", 0.8), 
+    ("A4", 0.8), 
+    ("F4", 0.8), 
+    ("E4", 1.2),
+
+    ("D4", 0.4), 
+    ("E4", 0.4), 
+    ("F4", 0.8), 
+    ("G4", 0.8), 
+    ("E4", 0.8), 
+    ("C4", 2),
+]
+
+
 def playSong(song,instrument):
   full_wave = []
   for note, duration in song:
@@ -358,11 +440,13 @@ def playSong(song,instrument):
       wave = instrument(freq, fs, duration)
       full_wave.extend(wave)
   return full_wave
-"""
-A kind of track never heard before with an effect also never heard before
-"""
-music=playSong(tune,piano)
-rev_music=rev_adt(music,fs//5)
-music = [music[i]*6+rev_music[i] for i in range(len(music))]
 
-Audio(music,rate=fs)
+music=playSong(chorus,piano)
+rev_music=rev_adt(music,2*fs)
+music = [music[i]*6+rev_music[i] for i in range(len(music))]
+verse = adt(playSong(verse,piano),fs*2)
+verse = [i*6 for i in verse]
+verse += music
+repLen=len(verse)
+
+Audio(drums(["kick","kick","snare",None]),rate=fs)
