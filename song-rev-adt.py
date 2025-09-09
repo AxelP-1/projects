@@ -442,6 +442,7 @@ verse += music
 repLen=len(verse)
 drum_loop=drums(["kick","kick","snare",None])
 drum_loop=[i*10 for i in drum_loop]
+verse = [i*3 for i in verse]
 verse = verse * 3
 start = repLen//fs
 while (start+0.4*4)<len(verse)//fs:
