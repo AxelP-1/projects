@@ -247,16 +247,18 @@ def custom_synth(freq, sampleRate, leng, harmonics):
 
     return taper(wave, 0, sampleRate // 10)
 kick_f32 = [i*60 for i in kick_f32]
-def drums(beat_pattern):
+def drums(beat_pattern, shuffle=0):
     beat_wave = []
     tot = 0
-    for beat in beat_pattern:
-        if beat == "kick":
+    for i in range(len(beat_pattern)):
+        if beat_pattern[i] == "kick":
             beat_wave=stack_with_delay(beat_wave,kick_f32,tot*0.4)
-        elif beat == "snare":
+        elif beat_pattern[i] == "snare":
             beat_wave=stack_with_delay(beat_wave,snare_f32,tot*0.4)
         
         beat_wave=stack_with_delay(beat_wave,hi_hat_hit(),tot*0.4)
+        if i%2==1:
+          tot+=1
         tot+=1
     return beat_wave
 
@@ -433,6 +435,7 @@ def playSong(song,instrument):
       wave = instrument(freq, fs, duration)
       full_wave.extend(wave)
   return full_wave
+"""
 music=playSong(chorus,piano)
 rev_music=rev_adt(music,2*fs)
 music = [music[i]*6+rev_music[i] for i in range(len(music))]
@@ -448,4 +451,5 @@ start = repLen//fs
 while (start+0.4*4)<len(verse)//fs:
   verse=stack_with_delay(verse,drum_loop,start)
   start+=0.4*4
-Audio(verse,rate=fs)
+"""
+Audio(drums(["kick","kick","snare",None],1)*10,rate=fs)
