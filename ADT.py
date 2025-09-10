@@ -106,7 +106,7 @@ import numpy as np
 from IPython.display import Audio
 import matplotlib.pyplot as plt
 
-def hi_hat_hit(duration=0.1, fs=44100):
+def hi_hat_hit(duration=0.4, fs=44100):
     # Generate white noise
     noise = np.random.normal(0, 1, int(fs * duration))
     
@@ -259,6 +259,7 @@ def drums(beat_pattern, shuffle=0):
         beat_wave=stack_with_delay(beat_wave,hi_hat_hit(),tot*0.4)
         if i%2==1:
           tot+=1
+          beat_wave=stack_with_delay(beat_wave,[0]*int(fs//0.4),tot*0.4-0.4)
         tot+=1
     return beat_wave
 
@@ -452,4 +453,6 @@ while (start+0.4*4)<len(verse)//fs:
   verse=stack_with_delay(verse,drum_loop,start)
   start+=0.4*4
 """
-Audio(drums(["kick","kick","snare",None],1)*10,rate=fs)
+drum_loop=drums(["kick","kick","snare",None],1)
+drum_loop=[i for i in drum_loop]
+Audio(drum_loop*10,rate=fs)
