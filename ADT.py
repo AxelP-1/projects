@@ -247,21 +247,35 @@ def custom_synth(freq, sampleRate, leng, harmonics):
 
     return taper(wave, 0, sampleRate // 10)
 kick_f32 = [i*60 for i in kick_f32]
-def drums(beat_pattern, shuffle=0):
+def drums(beat_pattern, shuffle=0.0):
     beat_wave = []
-    tot = 0
+    beat_spacing = 0.4  # 400 ms between beats
+    tot = 0.0  # running time in beats
+
     for i in range(len(beat_pattern)):
+        # Compute delay with optional shuffle
+        if shuffle > 0 and i % 2 == 1:
+            delay = tot * beat_spacing + (shuffle * beat_spacing * 0.5)
+        else:
+            delay = tot * beat_spacing
+
+        # Add kick/snare/hi-hat
         if beat_pattern[i] == "kick":
-            beat_wave=stack_with_delay(beat_wave,kick_f32,tot*0.4)
+            beat_wave = stack_with_delay(beat_wave, kick_f32, delay)
         elif beat_pattern[i] == "snare":
-            beat_wave=stack_with_delay(beat_wave,snare_f32,tot*0.4)
+            beat_wave = stack_with_delay(beat_wave, snare_f32, delay)
         
-        beat_wave=stack_with_delay(beat_wave,hi_hat_hit(),tot*0.4)
-        if i%2==1:
-          tot+=1
-          beat_wave=stack_with_delay(beat_wave,[0]*int(fs//0.4),tot*0.4-0.4)
-        tot+=1
+        # Add hi-hat always
+        beat_wave = stack_with_delay(beat_wave, hi_hat_hit(), delay)
+
+        # Add silent beat for None
+        if beat_pattern[i] is None:
+            pass  # just skip, no need to add silence explicitly here
+
+        tot += 1
+
     return beat_wave
+
 
 def applyReverb(audio, delay_ms=50, decay=0.5, repeats=5, fs=44100):
     delay_samples = int(fs * delay_ms / 1000)
