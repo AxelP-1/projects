@@ -64,11 +64,6 @@ def stack_with_delay(base_track, overlay_track, delay_sec, fs=44100):
     # Add overlay track starting at delay_samples
     combined_track[delay_samples:delay_samples + len(overlay_track)] += overlay_track
     
-    # Normalize if needed to avoid clipping
-    max_val = np.max(np.abs(combined_track))
-    if max_val > 1:
-        combined_track = combined_track / max_val
-    
     return combined_track
 
 def shift_and_adt(arr, d, ammount,fs=44100):
@@ -251,19 +246,19 @@ def custom_synth(freq, sampleRate, leng, harmonics):
         wave += amplitude * np.sin(2 * np.pi * freq * multiplier * t)
 
     return taper(wave, 0, sampleRate // 10)
-
-def drums(beat_pattern):
+kick_f32 = [i*60 for i in kick_f32]
+def drums(beat_pattern, shuffle=0):
     beat_wave = []
     tot = 0
-    for beat in beat_pattern:
-        if beat == "kick":
-            beat_wave=stack_with_delay(beat_wave,kick_f32,tot*int(44100*0.4))
-        elif beat == "snare":
-            beat_wave=stack_with_delay(beat_wave,snare_f32,tot*int(44100*0.4))
-        else:
-            beat_wave.extend([0.0] * int(44100*0.4))
+    for i in range(len(beat_pattern)):
+        if beat_pattern[i] == "kick":
+            beat_wave=stack_with_delay(beat_wave,kick_f32,tot*0.4)
+        elif beat_pattern[i] == "snare":
+            beat_wave=stack_with_delay(beat_wave,snare_f32,tot*0.4)
         
-        beat_wave=stack_with_delay(beat_wave,hi_hat_hit(),tot*int(44100*0.4))
+        beat_wave=stack_with_delay(beat_wave,hi_hat_hit(),tot*0.4)
+        if i%2==1:
+          tot+=1
         tot+=1
     return beat_wave
 
@@ -440,7 +435,7 @@ def playSong(song,instrument):
       wave = instrument(freq, fs, duration)
       full_wave.extend(wave)
   return full_wave
-
+"""
 music=playSong(chorus,piano)
 rev_music=rev_adt(music,2*fs)
 music = [music[i]*6+rev_music[i] for i in range(len(music))]
@@ -448,5 +443,13 @@ verse = adt(playSong(verse,piano),fs*2)
 verse = [i*6 for i in verse]
 verse += music
 repLen=len(verse)
-
-Audio(drums(["kick","kick","snare",None]),rate=fs)
+drum_loop=drums(["kick","kick","snare",None])
+drum_loop=[i*10 for i in drum_loop]
+verse = [i*3 for i in verse]
+verse = verse * 3
+start = repLen//fs
+while (start+0.4*4)<len(verse)//fs:
+  verse=stack_with_delay(verse,drum_loop,start)
+  start+=0.4*4
+"""
+Audio(drums(["kick","kick","snare",None],1)*10,rate=fs)
