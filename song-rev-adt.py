@@ -552,7 +552,7 @@ verse += music
 repLen = len(verse)
 
 drum_loop = drums(["kick", "kick", "snare", None], 0)
-drum_loop = [i * 4 for i in drum_loop]
+drum_loop = [i * 2 for i in drum_loop]
 
 verse = [i * 3 for i in verse]
 verse = verse * 3
@@ -565,8 +565,9 @@ while (start + 0.4 * 4) < len(verse) / fs:
 
 if isinstance(verse, np.ndarray):
     verse = verse.tolist()
-
-verse.extend(playSong(canon_melody_in_c, flute))
+bridge=playSong(canon_melody_in_c, flute)
+bridge=[sample_point*10 for sample_point in bridge]
+verse.extend(bridge)
 
 verse = get_to_speed(verse)
 if isinstance(verse, np.ndarray):
