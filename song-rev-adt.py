@@ -566,7 +566,7 @@ verse = verse * 3
 
 start = repLen // fs
 
-while (start + 0.4 * 4) < uptoBridge:
+while (start + 0.4 * 4) < uptoBridge+4*fs:
     verse = stack_with_delay(verse, drum_loop, start)
     start += 0.4 * 4
 
