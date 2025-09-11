@@ -88,7 +88,7 @@ def shift_and_adt(arr, d, ammount,fs=44100):
 
     return unpad(transformed)
 
-def chorus(arr,d,steps):
+def chorus_effect(arr,d,steps):
   for i in range(steps):
     arr=shift_and_adt(arr,d,0.1/steps)
   return arr
@@ -227,8 +227,6 @@ snare_f32 /= np.max(np.abs(snare_f32))
 # Concatenate
 combined = np.concatenate((kick_f32, snare_f32))
 
-# Play combined sound
-synth=chorus(combined,fs//100,20)
 
 def squareWave(freq, sampleRate, leng):
     ret = []
