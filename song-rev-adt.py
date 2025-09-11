@@ -544,7 +544,7 @@ music = [music[i] * 6 + rev_music[i] for i in range(len(music))]
 
 verse = adt(playSong(verse, piano), fs * 2)
 verse = [i * 6 for i in verse]
-finalVerse = verse[:]  # Make a copy, just in case
+finalVerse = verse
 
 verse += music
 repLen = len(verse)
@@ -553,8 +553,6 @@ if isinstance(verse, np.ndarray):
     verse = verse.tolist()
 bridge=playSong(canon_melody_in_c, flute)
 bridge=[sample_point*10 for sample_point in bridge]
-uptoBridge=len(verse)
-verse.extend(bridge)
 
 drum_loop = drums(["kick", "kick", "snare", None], 0)
 drum_loop = [i * 2 for i in drum_loop]
@@ -563,6 +561,8 @@ verse = [i * 3 for i in verse]
 verse = verse * 3
 
 start = repLen // fs
+uptoBridge=len(verse)
+verse.extend(bridge)
 
 while (start + 0.4 * 4) < uptoBridge//fs+4:
     verse = stack_with_delay(verse, drum_loop, start)
