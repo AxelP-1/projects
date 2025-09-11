@@ -113,9 +113,9 @@ def cubic_spline(p0, p1, p2, p3, t):
     
     return ((a * t + b) * t + c) * t + d
 
-def get_to_speed(input_signal, fs=44100, start_speed=0, end_speed=1.0):
+def get_to_speed(input_signal, fs=44100, start_speed=0, end_speed=1.0, ramp_time=1.0):
+    input_signal=np.array(input_signal)
     duration = len(input_signal) / fs
-    ramp_time = 1.0
     output_duration = ramp_time / ((start_speed + end_speed) / 2) + (duration - ramp_time) / end_speed
     output_len = int(output_duration * fs)
     output_signal = np.zeros(output_len)
@@ -505,6 +505,33 @@ verse = [
     ("G4", 2),
 ]
 
+canon_melody_in_c = [
+    ("C4", 0.2),
+    ("E4", 0.4),
+    ("G4", 0.4),
+    ("A4", 0.8),
+    ("G4", 0.4),
+    ("F4", 0.4),
+    ("E4", 0.8),
+
+    ("D4", 0.4),
+    ("F4", 0.4),
+    ("G4", 0.8),
+    ("F4", 0.4),
+    ("E4", 0.4),
+    ("D4", 0.8),
+
+    ("C4", 0.4),
+    ("E4", 0.4),
+    ("F4", 0.8),
+    ("E4", 0.4),
+    ("D4", 0.4),
+    ("C4", 0.4),
+    ("D4", 0.4),
+    ("C4", 0.4),
+    ("D4", 0.4),
+    ("C4", 1.2),
+]
 
 def playSong(song,instrument):
   full_wave = []
@@ -513,21 +540,46 @@ def playSong(song,instrument):
       wave = instrument(freq, fs, duration)
       full_wave.extend(wave)
   return full_wave
-music=playSong(chorus,piano)
-rev_music=rev_adt(music,2*fs)
-music = [music[i]*6+rev_music[i] for i in range(len(music))]
-verse = adt(playSong(verse,piano),fs*2)
-verse = [i*6 for i in verse]
+music = playSong(chorus, piano)
+rev_music = rev_adt(music, 2 * fs)
+music = [music[i] * 6 + rev_music[i] for i in range(len(music))]
+
+verse = adt(playSong(verse, piano), fs * 2)
+verse = [i * 6 for i in verse]
+finalVerse = verse[:]  # Make a copy, just in case
+
 verse += music
-repLen=len(verse)
-drum_loop=drums(["kick","kick","snare",None],1)
-drum_loop=[i*7 for i in drum_loop]
-verse = [i*3 for i in verse]
+repLen = len(verse)
+
+drum_loop = drums(["kick", "kick", "snare", None], 0)
+drum_loop = [i * 4 for i in drum_loop]
+
+verse = [i * 3 for i in verse]
 verse = verse * 3
-start = repLen//fs
 
-while (start+0.4*4)<len(verse)//fs:
-  verse=stack_with_delay(verse,drum_loop,start)
-  start+=0.4*4
+start = repLen // fs
 
-Audio(get_to_speed(verse),rate=fs)
+while (start + 0.4 * 4) < len(verse) / fs:
+    verse = stack_with_delay(verse, drum_loop, start)
+    start += 0.4 * 4
+
+if isinstance(verse, np.ndarray):
+    verse = verse.tolist()
+
+verse.extend(playSong(canon_melody_in_c, flute))
+
+verse = get_to_speed(verse)
+if isinstance(verse, np.ndarray):
+    verse = verse.tolist()
+
+if isinstance(finalVerse, np.ndarray):
+    finalVerse = finalVerse.tolist()
+
+verse.extend(finalVerse)
+
+verse = verse[::-1]
+
+verse = get_to_speed(verse)
+verse = verse[::-1]
+
+Audio(verse, rate=fs)
