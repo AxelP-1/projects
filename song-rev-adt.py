@@ -1,4 +1,4 @@
-from scipy.signal import butter, lfilter
+from scipy.signal import *
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.fft import fft, fftfreq
@@ -105,6 +105,41 @@ def rev_adt(arr, d):
 import numpy as np
 from IPython.display import Audio
 import matplotlib.pyplot as plt
+def cubic_spline(p0, p1, p2, p3, t):
+    a = -0.5*p0 + 1.5*p1 - 1.5*p2 + 0.5*p3
+    b = p0 - 2.5*p1 + 2*p2 - 0.5*p3
+    c = -0.5*p0 + 0.5*p2
+    d = p1
+    
+    return ((a * t + b) * t + c) * t + d
+
+def get_to_speed(input_signal, fs=44100, start_speed=0, end_speed=1.0):
+    duration = len(input_signal) / fs
+    ramp_time = 1.0
+    output_duration = ramp_time / ((start_speed + end_speed) / 2) + (duration - ramp_time) / end_speed
+    output_len = int(output_duration * fs)
+    output_signal = np.zeros(output_len)
+    
+    for i in range(output_len):
+        t = i / fs
+        
+        if t < ramp_time:
+            input_t = start_speed * t + ((end_speed - start_speed) / (2 * ramp_time)) * t**2
+        else:
+            pos_at_ramp = start_speed * ramp_time + ((end_speed - start_speed) / (2 * ramp_time)) * ramp_time**2
+            input_t = pos_at_ramp + end_speed * (t - ramp_time)
+        
+        input_index = input_t * fs
+        if input_index >= input_signal.size - 1:
+            input_index = input_signal.size - 1.000001
+        
+        idx_floor = int(np.floor(input_index))
+        idx_ceil = idx_floor + 1
+        
+        alpha = input_index - idx_floor
+        output_signal[i] = (1 - alpha) * input_signal[idx_floor] + alpha * input_signal[idx_ceil]
+    
+    return output_signal
 
 def hi_hat_hit(duration=0.4, fs=44100):
     # Generate white noise
@@ -327,32 +362,60 @@ def noteToFreq(note):
     semi = toSemiTones(note)
     return 440 * 2 ** (semi / 12)
 
+def bass_synth(freq, sampleRate, leng):
+    t = np.linspace(0, leng, int(sampleRate * leng), endpoint=False)
+
+    # Basic waveform: fundamental + 2nd and 3rd harmonics with decreasing amplitude
+    wave = (1.0 * np.sin(2 * np.pi * freq * t) +
+            0.5 * np.sin(2 * np.pi * freq * 2 * t) +
+            0.25 * np.sin(2 * np.pi * freq * 3 * t))
+
+    # Apply clipping distortion to add growl (soft clipping)
+    wave = np.tanh(wave * 3)  # increase 3 for more distortion
+
+    # Envelope: slow attack and medium decay for bass fullness
+    attack = np.clip(t * 5, 0, 1)
+    decay = np.exp(-t * 3)
+    envelope = attack * decay
+    wave *= envelope
+
+    # Optional low-pass filter to mellow sound
+    def lowpass_filter(data, cutoff=400, fs=sampleRate, order=4):
+        b, a = butter(order, cutoff / (0.5 * fs), btype='low')
+        return lfilter(b, a, data)
+    
+    wave = lowpass_filter(wave)
+
+    # Normalize
+    wave /= np.max(np.abs(wave)) if np.max(np.abs(wave)) > 0 else 1
+
+    return wave
+
 def harmonica(freq, sampleRate, leng):
     t = np.linspace(0, leng, int(sampleRate * leng), endpoint=False)
     wave = np.zeros_like(t)
 
-    # Square-wave-like harmonics (odd harmonics)
-    for i in range(1, 30, 2):  # odd harmonics only
+    # Add odd harmonics with decreasing amplitude
+    for i in range(1, 20, 2):  # odd harmonics only
         wave += (1.0 / i**0.8) * np.sin(2 * np.pi * freq * i * t)
 
-    # Add filtered noise (to simulate reed and air flow)
+    # Add filtered noise to simulate reed noise
     noise = np.random.normal(0, 1, len(t))
-  
     filtered_noise = bandpass_filter(noise, 1000, 3000, sampleRate)
-    wave += 0.05 * filtered_noise  # small amount
+    wave += 0.05 * filtered_noise  # subtle noise
 
-    # Apply tremolo (slow AM)
-    tremolo = 1 + 0.2 * np.sin(2 * np.pi * 5 * t)
+    # Tremolo (slow amplitude modulation)
+    tremolo = 1 + 0.15 * np.sin(2 * np.pi * 5 * t)
     wave *= tremolo
 
-    # Envelope
-    attack = np.clip(t * 15, 0, 1)
-    decay = np.exp(-t * 1.5)
+    # Envelope: fast attack, moderate decay
+    attack = np.clip(t * 20, 0, 1)
+    decay = np.exp(-t * 2)
     envelope = attack * decay
     wave *= envelope
 
-    # Final taper
-    return taper(wave, 0, sampleRate // 50)
+    # Smooth taper at start and end
+    return taper(wave, start=sampleRate//50, end=sampleRate//50)
 
 
 
@@ -438,8 +501,8 @@ verse = [
     ("E4", 0.4), 
     ("F4", 0.8), 
     ("G4", 0.8), 
-    ("E4", 0.8), 
-    ("C4", 2),
+    ("F4", 0.8), 
+    ("G4", 2),
 ]
 
 
@@ -450,7 +513,6 @@ def playSong(song,instrument):
       wave = instrument(freq, fs, duration)
       full_wave.extend(wave)
   return full_wave
-"""
 music=playSong(chorus,piano)
 rev_music=rev_adt(music,2*fs)
 music = [music[i]*6+rev_music[i] for i in range(len(music))]
@@ -458,15 +520,14 @@ verse = adt(playSong(verse,piano),fs*2)
 verse = [i*6 for i in verse]
 verse += music
 repLen=len(verse)
-drum_loop=drums(["kick","kick","snare",None])
-drum_loop=[i*10 for i in drum_loop]
+drum_loop=drums(["kick","kick","snare",None],1)
+drum_loop=[i*7 for i in drum_loop]
 verse = [i*3 for i in verse]
 verse = verse * 3
 start = repLen//fs
+
 while (start+0.4*4)<len(verse)//fs:
   verse=stack_with_delay(verse,drum_loop,start)
   start+=0.4*4
-"""
-drum_loop=drums(["kick","kick","snare",None],1)
-drum_loop=[i for i in drum_loop]
-Audio(drum_loop*10,rate=fs)
+
+Audio(get_to_speed(verse),rate=fs)
