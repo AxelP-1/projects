@@ -1,3 +1,6 @@
+import sys
+sys.setrecursionlimit(2147483647)
+
 def append_co_prime(n,arr):
   ret=0
   for i in arr:
@@ -20,7 +23,7 @@ def is_co_prime(n,arr):
     return True
   else:
     return False
-    
+
 def primes_to(n):
   if n<2:
     return []
