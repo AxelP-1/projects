@@ -538,48 +538,5 @@ def playSong(song,instrument):
       wave = instrument(freq, fs, duration)
       full_wave.extend(wave)
   return full_wave
-music = playSong(chorus, piano)
-rev_music = rev_adt(music, 2 * fs)
-music = [music[i] * 6 + rev_music[i] for i in range(len(music))]
-
-verse = adt(playSong(verse, piano), fs * 2)
-verse = [i * 6 for i in verse]
-finalVerse = verse
-
-verse += music
-repLen = len(verse)
-
-if isinstance(verse, np.ndarray):
-    verse = verse.tolist()
-bridge=playSong(canon_melody_in_c, flute)
-bridge=[sample_point*10 for sample_point in bridge]
-
-drum_loop = drums(["kick", "kick", "snare", None], 0)
-drum_loop = [i * 2 for i in drum_loop]
-
-verse = [i * 3 for i in verse]
-verse = verse * 3
-
-start = repLen // fs
-uptoBridge=len(verse)
-verse.extend(bridge)
-
-while (start + 0.4 * 4) < uptoBridge//fs+4:
-    verse = stack_with_delay(verse, drum_loop, start)
-    start += 0.4 * 4
-
-verse = get_to_speed(verse)
-if isinstance(verse, np.ndarray):
-    verse = verse.tolist()
-
-if isinstance(finalVerse, np.ndarray):
-    finalVerse = finalVerse.tolist()
-
-verse.extend(finalVerse)
-
-verse = verse[::-1]
-
-verse = get_to_speed(verse)
-verse = verse[::-1]
 
 Audio(verse, rate=fs)
