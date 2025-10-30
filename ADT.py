@@ -112,9 +112,8 @@ def cubic_spline(p0, p1, p2, p3, t):
     d = p1
     
     return ((a * t + b) * t + c) * t + d
-
 def get_to_speed(input_signal, fs=44100, start_speed=0, end_speed=1.0, ramp_time=1.0):
-    input_signal=np.array(input_signal)
+    input_signal = np.array(input_signal)
     duration = len(input_signal) / fs
     output_duration = ramp_time / ((start_speed + end_speed) / 2) + (duration - ramp_time) / end_speed
     output_len = int(output_duration * fs)
@@ -130,14 +129,25 @@ def get_to_speed(input_signal, fs=44100, start_speed=0, end_speed=1.0, ramp_time
             input_t = pos_at_ramp + end_speed * (t - ramp_time)
         
         input_index = input_t * fs
-        if input_index >= input_signal.size - 1:
-            input_index = input_signal.size - 1.000001
+        
+        # Clamp input_index to avoid going out of bounds for cubic spline
+        input_index = min(input_index, len(input_signal) - 2.001)
         
         idx_floor = int(np.floor(input_index))
-        idx_ceil = idx_floor + 1
+        idx0 = max(0, idx_floor - 1)
+        idx1 = idx_floor
+        idx2 = min(len(input_signal) - 1, idx_floor + 1)
+        idx3 = min(len(input_signal) - 1, idx_floor + 2)
         
         alpha = input_index - idx_floor
-        output_signal[i] = (1 - alpha) * input_signal[idx_floor] + alpha * input_signal[idx_ceil]
+        
+        output_signal[i] = cubic_spline(
+            input_signal[idx0],
+            input_signal[idx1],
+            input_signal[idx2],
+            input_signal[idx3],
+            alpha
+        )
     
     return output_signal
 
@@ -538,48 +548,13 @@ def playSong(song,instrument):
       wave = instrument(freq, fs, duration)
       full_wave.extend(wave)
   return full_wave
-music = playSong(chorus, piano)
-rev_music = rev_adt(music, 2 * fs)
-music = [music[i] * 6 + rev_music[i] for i in range(len(music))]
-
-verse = adt(playSong(verse, piano), fs * 2)
-verse = [i * 6 for i in verse]
-finalVerse = verse
-
-verse += music
-repLen = len(verse)
-
-if isinstance(verse, np.ndarray):
-    verse = verse.tolist()
-bridge=playSong(canon_melody_in_c, flute)
-bridge=[sample_point*10 for sample_point in bridge]
-
-drum_loop = drums(["kick", "kick", "snare", None], 0)
-drum_loop = [i * 2 for i in drum_loop]
-
-verse = [i * 3 for i in verse]
-verse = verse * 3
-
-start = repLen // fs
-uptoBridge=len(verse)
-verse.extend(bridge)
-
-while (start + 0.4 * 4) < uptoBridge//fs+4:
-    verse = stack_with_delay(verse, drum_loop, start)
-    start += 0.4 * 4
-
-verse = get_to_speed(verse)
-if isinstance(verse, np.ndarray):
-    verse = verse.tolist()
-
-if isinstance(finalVerse, np.ndarray):
-    finalVerse = finalVerse.tolist()
-
-verse.extend(finalVerse)
-
-verse = verse[::-1]
-
-verse = get_to_speed(verse)
-verse = verse[::-1]
+nots=["C3","D3","E3","F3","G3","A3","B3","C4","D4"]
+for i in nots:
+  print(f"Note: {i} is {noteToFreq(i)}")
+verse=playSong([("C3",0.4),("D3",0.4),("E3",0.4),("F3",0.4),("G3",0.4),("A3",0.4),("B3",0.4),("C4",0.4),("D4",0.4),("E4",0.4),("F4",0.4),("G4",0.4),("A4",0.4),("B4",0.4)],piano)
+verse1=playSong([("E3",0.4),("F3",0.4),("G3",0.4),("A3",0.4),("B3",0.4),("C4",0.4),("D4",0.4),("E4",0.4),("F4",0.4),("G4",0.4),("A4",0.4),("B4",0.4),("C5",0.4),("D5",0.4)],piano)
+verse2=playSong([("G3",0.4),("A3",0.4),("B3",0.4),("C4",0.4),("D4",0.4),("E4",0.4),("F4",0.4),("G4",0.4),("A4",0.4),("B4",0.4),("C5",0.4),("D5",0.4),("E5",0.4),("F5",0.4)],piano)
+verse=[verse[i]+verse1[i]+verse2[i] for i in range(len(verse))]
+verse = get_to_speed(verse,ramp_time=3)
 
 Audio(verse, rate=fs)
