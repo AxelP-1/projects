@@ -21,12 +21,18 @@
   <p class="SerifFont">The code is based on Js. All built in functions come with ( already.<br>
   Table 1:<br>
   0) ||| is new line (or ";" in Js and is absolutely mandatory)<br>
-  1) ||I is a meta character, look at the next table for more.<br>
+  1) ||I is bitwise not, !<br>
   2) ||l is a print command ("console.log(" in Js)<br>
   3) |I| is define variable ("var" in Js, is already followed by a meta character)<br>
   4) |II is =, used for variable definitions.<br>
   5) |Il is ), used to close parentheses.<br>
   6) |l| is (, used for functions you create.<br>
+  7) |lI is ", used for strings.<br>
+  8) |ll is |, used for or<br>
+  9) I|| is &, used for and or for strings with values inside, (js, $"Your score is {x}")<br> 
+  10) I|I is ^, used for XOR
+  11) I|l is making a bitwise operation a boolean opperation.
+  12) II| is if, ("if(" in js)
   </p>
 <script>
 function convert() {
@@ -36,6 +42,10 @@ function convert() {
   const iLIArr = iLI.split('');
 
   const iLIArrFiltered = iLIArr.filter(ch => ch === 'I' || ch === 'l' || ch === '|');
+  
+  for(let i = 0; i < iLIArrFiltered.length/3; i++){
+  
+  }
   
   const filteredText = iLIArrFiltered.join('');
 
