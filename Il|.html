@@ -19,7 +19,7 @@
   <button onclick="convert()">Convert to Js</button>
   <p id="jsOutput"></p>
   <p class="SerifFont">The code is based on Js. All built in functions come with ( already. For ifs, elses and functions use line breaks for the open curly bracket.<br>
-  Table 1:<br>
+  <strong>Table 1:</strong><br>
   0) ||| is new line (or ";" in Js and is absolutely mandatory)<br>
   1) ||I is bitwise not, !<br>
   2) ||l is a print command ("console.log(" in Js)<br>
@@ -30,14 +30,101 @@
   7) |lI is ", used for strings.<br>
   8) |ll is |, used for or<br>
   9) I|| is &, used for and or for strings with values inside, (js, $"Your score is {x}")<br> 
-  10) I|I is ^, used for XOR
-  11) I|l is making a bitwise operation a boolean opperation.
-  12) II| is if, ("if(" in js)
-  13) III is else, ("else(" in js)
+  10) I|I is ^, used for XOR<br>
+  11) I|l is making a bitwise operation a boolean opperation.<br>
+  12) II| is if, ("if(" in js)<br>
+  13) III is else, ("else(" in js)<br>
+  14) Il| is +<br>
+  15) IlI is -<br>
+  16) Ill is /<br>
+  17) l|| is * for multiplication<br>
+  18) l|I is [<br>
+  19) l|l is ]<br>
+  20) lI| is ,<br>
+  21) lII is for<br>
+  
+  27) lll is meta, look at the next alphabet. This is true for all alphabets.<br><br><br>
+  
+  <strong>Table 2:</strong>  <br>
+  0) ||| is a<br>
+  1) ||I is b<br>
+  2) ||l is c<br>
+  3) |I| is d<br>
+  4) |II is e<br>
+  5) |Il is f<br>
+  6) |l| is g<br>
+  7) |lI is h<br>
+  8) |ll is i<br>
+  9) I|| is j<br>
+  10) I|I is k<br>
+  11) I|l is l<br>
+  12) II| is m<br>
+  13) III is n<br>
+  14) IIl is o<br>
+  15) Il| is p<br>
+  16) IlI is q<br>
+  17) Ill is r<br>
+  18) l|| is s<br>
+  19) l|I is t<br>
+  20) l|l is u<br>
+  21) lI| is v<br>
+  22) lII is w<br>
+  23) lIl is x<br>
+  24) ll| is y<br>
+  25) llI is z<br>
+  26) lll is meta<br>
+
   
   </p>
 <script>
 function convert() {
+
+  conver=[const ilJsMapping = {
+  "|||": ";",                 
+  "||I": "!",             
+  "||l": "console.log(",     
+  "|I|": "var ",      
+  "|II": "=",        
+  "|Il": ")",            
+  "|l|": "(",          
+  "|lI": '"',           
+  "|ll": "|",           
+  "I||": "&",           
+  "I|I": "^",             
+  "I|l": "Boolean(",         
+  "II|": "if(",              
+  "III": "else("      
+};
+
+  ,{
+  "|||": "a",
+  "||I": "b",
+  "||l": "c",
+  "|I|": "d",
+  "|II": "e",
+  "|Il": "f",
+  "|l|": "g",
+  "|lI": "h",
+  "|ll": "i",
+  "I||": "j",
+  "I|I": "k",
+  "I|l": "l",
+  "II|": "m",
+  "III": "n",
+  "IIl": "o",
+  "Il|": "p",
+  "IlI": "q",
+  "Ill": "r",
+  "l||": "s",
+  "l|I": "t",
+  "l|l": "u",
+  "lI|": "v",
+  "lII": "w",
+  "lIl": "x",
+  "ll|": "y",
+  "llI": "z",
+}
+]
   const textarea = document.getElementById('ilInput');
   const iLI = textarea.value;
 
@@ -46,7 +133,8 @@ function convert() {
   const iLIArrFiltered = iLIArr.filter(ch => ch === 'I' || ch === 'l' || ch === '|');
   
   for(let i = 0; i < iLIArrFiltered.length/3; i++){
-  
+  	let curr = iLIArrFiltered[i]+iLIArrFiltered[i+1]+iLIArrFiltered[i+2];
+    
   }
   
   const filteredText = iLIArrFiltered.join('');
