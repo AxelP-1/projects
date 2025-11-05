@@ -1,0 +1,98 @@
+<script>
+function convert() {
+  const textarea = document.getElementById('ilInput');
+  const code = textarea.value;
+
+  // Filter only valid characters
+  const validChars = code.split('').filter(ch => ch === 'I' || ch === 'l' || ch === '|').join('');
+
+  // Array of JS code mappings
+  const jsMappings = [
+    {
+      "|||": ";",
+      "||I": "!",
+      "||l": "console.log(",
+      "|I|": "var ",
+      "|II": "=",
+      "|Il": ")",
+      "|l|": "(",
+      "|lI": '"',
+      "|ll": "|",
+      "I||": "&",
+      "I|I": "^",
+      "I|l": "Boolean(",
+      "II|": "if(",
+      "III": "else(",
+      "Il|": "+",
+      "IlI": "-",
+      "Ill": "/",
+      "l||": "*",
+      "l|I": "[",
+      "l|l": "]",
+      "lI|": ",",
+      "lII": "for"
+    }
+    // You could add more JS mapping sets here if needed
+  ];
+
+  // Array of alphabets
+  const alphabets = [
+    { // Alphabet 0: lowercase
+      "|||": "a",
+      "||I": "b",
+      "||l": "c",
+      "|I|": "d",
+      "|II": "e",
+      "|Il": "f",
+      "|l|": "g",
+      "|lI": "h",
+      "|ll": "i",
+      "I||": "j",
+      "I|I": "k",
+      "I|l": "l",
+      "II|": "m",
+      "III": "n",
+      "IIl": "o",
+      "Il|": "p",
+      "IlI": "q",
+      "Ill": "r",
+      "l||": "s",
+      "l|I": "t",
+      "l|l": "u",
+      "lI|": "v",
+      "lII": "w",
+      "lIl": "x",
+      "ll|": "y",
+      "llI": "z"
+    }
+    // More alphabets can be added here
+  ];
+
+  let result = '';
+  let useAlphabet = false;
+  let currentAlphabetIndex = 0; // default alphabet
+  let currentJsMappingIndex = 0; // default JS mapping
+
+  for (let i = 0; i < validChars.length; i += 3) {
+    const chunk = validChars.substr(i, 3);
+
+    if (chunk === "lll") {
+      useAlphabet = true; // next token uses alphabet mapping
+      continue;           // skip meta token itself
+    }
+
+    if (useAlphabet) {
+      if (alphabets[currentAlphabetIndex].hasOwnProperty(chunk)) {
+        result += alphabets[currentAlphabetIndex][chunk];
+      }
+      useAlphabet = false; // reset after use
+    } else {
+      if (jsMappings[currentJsMappingIndex].hasOwnProperty(chunk)) {
+        result += jsMappings[currentJsMappingIndex][chunk];
+      }
+    }
+  }
+
+  document.getElementById('jsOutput').textContent = result;
+}
+</script>
