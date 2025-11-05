@@ -18,13 +18,15 @@
   <textarea id="ilInput" placeholder="Type Il| code here..."></textarea>
   <button onclick="convert()">Convert to Js</button>
   <p id="jsOutput"></p>
-  <p class="SerifFont">The code is based on Js. All functions come with ( already.<br>
+  <p class="SerifFont">The code is based on Js. All built in functions come with ( already.<br>
   Table 1:<br>
-  1) ||| is new line (or ";" in Js and is absolutely mandatory)<br>
-  2) III is a meta character, look at the next table for more.
-  3) lll is a print command ("console.log(" in Js)
-  4) |I| is define variable ("var" in Js)
-  5) I|I is =, used for variable definitions.
+  0) ||| is new line (or ";" in Js and is absolutely mandatory)<br>
+  1) ||I is a meta character, look at the next table for more.
+  2) ||l is a print command ("console.log(" in Js)
+  3) |I| is define variable ("var" in Js, is already followed by a meta character)
+  4) |II is =, used for variable definitions.
+  5) |Il is ), used to close parentheses.
+  6) |l| is (, used for functions you create.
   </p>
 <script>
 function convert() {
